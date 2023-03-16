@@ -90,16 +90,13 @@ init_predictor()
   l_mask = bitmask( lhistoryBits );
 
   globalhistory = NOTTAKEN;
-
-  if (bpType == GSHARE ){
-    g_pht = (uint8_t*) malloc(sizeof(uint8_t)*g_pht_size); // creates g_pht of  size 2^(ghistoryBits). 
-    for (int i=0; i<g_pht_size ; ++i ) g_pht[i] = WN;      // and initialised to Weakly not taken. 
-  }
-  else if(bpType == TOURNAMENT){
     l_ht  = (uint32_t*) malloc(sizeof(uint32_t)*l_ht_size); // creates l_ht  of  size 2^(lhistoryBits).
     l_pht = (uint8_t*) malloc(sizeof(uint8_t)*l_pht_size);  // creates l_pht of  size 2^(lhistoryBits).
     g_pht = (uint8_t*) malloc(sizeof(uint8_t)*g_pht_size);  // creates g_pht of  size 2^(ghistoryBits). 
-    c_pht = (uint8_t*) malloc(sizeof(uint8_t)*g_pht_size);  // creates g_pht of  size 2^(ghistoryBits). 
+    c_pht = (uint8_t*) malloc(sizeof(uint8_t)*g_pht_size);  
+  if (bpType == GSHARE )
+    for (int i=0; i<g_pht_size ; ++i ) g_pht[i] = WN;      // and initialised to Weakly not taken. 
+  else if(bpType == TOURNAMENT){
     for (int i=0; i<g_pht_size ; ++i ) g_pht[i] = WN;       // and initialised to Weakly not taken. 
     for (int i=0; i<l_pht_size ; ++i ) l_pht[i] = WN;       // and initialised to Weakly not taken. 
     //Initializing Local History Table
@@ -125,16 +122,13 @@ make_prediction(uint32_t pc)
 
   // Make a prediction based on the bpType
   g_pred = (g_pht[index] > 1)?  TAKEN :  NOTTAKEN;
-  //l_pred = (l_pht[l_ht[pc & l_mask]]>1)?TAKEN:NOTTAKEN;
-  //c_pred = (c_pht[gh_mask]>1)?LOCAL:GLOBAL;
+  l_pred = (l_pht[l_ht[pc & l_mask]]>1)?TAKEN:NOTTAKEN;
+  c_pred = (c_pht[gh_mask]>1)?LOCAL:GLOBAL;
   switch (bpType) {
     case STATIC:
       return TAKEN;
     case GSHARE: return g_pred; 
-    case TOURNAMENT:{ 
-  l_pred = (l_pht[l_ht[pc & l_mask]]>1)?TAKEN:NOTTAKEN;
-  c_pred = (c_pht[gh_mask]>1)?LOCAL:GLOBAL;
-  return c_pred?g_pred:l_pred;}
+    case TOURNAMENT: return c_pred?l_pred:g_pred;
     case CUSTOM:
     default:
       break;
